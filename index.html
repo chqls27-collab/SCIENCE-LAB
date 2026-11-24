@@ -1,0 +1,580 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>보일의 법칙 실험실</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=Noto+Sans+KR:wght@400;500;700&display=swap">
+<style>
+/* 레이아웃: 왼쪽에 실험 장치(주사기+센서+조작), 오른쪽에 그래프와 기록표. 좁은 화면에서는 한 줄로 쌓는다. */
+:root {
+  --sans: 'Noto Sans KR', system-ui, -apple-system, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  --bg: #eef3f6;
+  --surface: #ffffff;
+  --surface-2: #f4f8fa;
+  --fg: #13222b;
+  --muted: #566873;
+  --line: #d3dde3;
+  --accent: #0a6f93;
+  --accent-fg: #ffffff;
+  --gas: #e4602f;
+  --gas-bg: rgba(228, 96, 47, 0.12);
+  --glass: rgba(10, 111, 147, 0.06);
+  --bar: #7f95a2;
+  --seal: #34454f;
+  --rod: #b3c0c8;
+  --lcd: #12262d;
+  --lcd-text: #7be3b4;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d161c;
+    --surface: #152129;
+    --surface-2: #1b2a33;
+    --fg: #e5eef2;
+    --muted: #95a8b3;
+    --line: #2b3b45;
+    --accent: #4cc4e6;
+    --accent-fg: #06222c;
+    --gas: #ff8a5c;
+    --gas-bg: rgba(255, 138, 92, 0.14);
+    --glass: rgba(76, 196, 230, 0.07);
+    --bar: #6a808d;
+    --seal: #7f95a2;
+    --rod: #3d4e58;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d161c;
+  --surface: #152129;
+  --surface-2: #1b2a33;
+  --fg: #e5eef2;
+  --muted: #95a8b3;
+  --line: #2b3b45;
+  --accent: #4cc4e6;
+  --accent-fg: #06222c;
+  --gas: #ff8a5c;
+  --gas-bg: rgba(255, 138, 92, 0.14);
+  --glass: rgba(76, 196, 230, 0.07);
+  --bar: #6a808d;
+  --seal: #7f95a2;
+  --rod: #3d4e58;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.6;
+}
+.wrap {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding-block: 24px 40px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+header { margin-bottom: 20px; }
+h1 { font-size: 1.75rem; line-height: 1.25; margin: 0 0 6px; letter-spacing: -0.01em; text-wrap: balance; }
+.sub { margin: 0; color: var(--muted); max-width: 60ch; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.chip {
+  font-size: 0.8125rem; font-weight: 500;
+  padding: 3px 10px; border: 1px solid var(--line); border-radius: 999px;
+  background: var(--surface); color: var(--muted);
+}
+
+.layout { display: grid; gap: 20px; grid-template-columns: minmax(0, 1fr); }
+.col { display: grid; gap: 20px; min-width: 0; align-content: start; }
+@media (min-width: 940px) {
+  .layout { grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); align-items: start; }
+}
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; min-width: 0; }
+.card h2 { font-size: 1rem; margin: 0; font-weight: 700; }
+.card-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; margin-bottom: 12px; }
+
+#syringe { width: 100%; height: auto; display: block; }
+#syringe text { font-family: var(--sans); }
+.barrel { fill: var(--glass); stroke: var(--bar); stroke-width: 2; }
+.gasbox { fill: var(--gas-bg); }
+.particle { fill: var(--gas); }
+.seal { fill: var(--seal); }
+.rod { fill: var(--rod); }
+.pad { fill: var(--rod); stroke: var(--bar); stroke-width: 1.5; }
+.plunger { cursor: ew-resize; touch-action: none; outline: none; }
+.plunger:focus-visible .pad { stroke: var(--accent); stroke-width: 3; }
+.flange { fill: var(--bar); pointer-events: none; }
+.sensor { fill: var(--surface-2); stroke: var(--bar); stroke-width: 2; }
+.tube { fill: var(--rod); stroke: var(--bar); stroke-width: 1.5; }
+.lcd { fill: var(--lcd); }
+.lcd-val { fill: var(--lcd-text); font-family: var(--mono) !important; font-weight: 600; font-size: 18px; }
+.lcd-unit { fill: var(--lcd-text); font-size: 11px; opacity: 0.85; }
+.svg-lbl { fill: var(--fg); font-size: 12px; font-weight: 500; }
+.tick { stroke: var(--bar); stroke-width: 1.2; }
+.tick-tx { fill: var(--muted); font-size: 13px; font-family: var(--mono) !important; }
+.dim { stroke: var(--fg); stroke-width: 1.5; fill: none; }
+.dim-tx { fill: var(--fg); font-size: 14px; font-weight: 700; font-family: var(--mono) !important; }
+
+.ctrl { margin-top: 12px; display: grid; gap: 8px; }
+.ctrl label { font-weight: 500; display: flex; justify-content: space-between; gap: 8px; }
+.ctrl-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center; }
+input[type="range"] { width: 100%; accent-color: var(--accent); min-height: 28px; }
+button {
+  font: inherit; font-weight: 500; color: var(--fg);
+  background: var(--surface-2); border: 1px solid var(--line); border-radius: 8px;
+  padding: 8px 14px; cursor: pointer; min-height: 40px;
+}
+button:hover { border-color: var(--accent); }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); font-weight: 700; }
+button.primary:hover { filter: brightness(1.06); }
+button.step { width: 40px; padding: 0; font-size: 1.25rem; line-height: 1; }
+button.ghost { background: transparent; }
+.hint { margin: 0; font-size: 0.8125rem; color: var(--muted); }
+
+.readouts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 14px; }
+.ro { background: var(--surface-2); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; display: grid; gap: 0; }
+.ro-l { font-size: 0.8125rem; color: var(--muted); font-weight: 500; }
+.ro-v { font-family: var(--mono); font-weight: 600; font-size: 1.75rem; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.ro-v small { font-family: var(--sans); font-size: 0.875rem; font-weight: 500; color: var(--muted); margin-left: 4px; }
+.ro-s { font-size: 0.8125rem; color: var(--muted); font-variant-numeric: tabular-nums; min-height: 1.3em; }
+.actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+.status { margin: 10px 0 0; min-height: 1.5em; font-size: 0.875rem; color: var(--muted); }
+
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; background: var(--surface-2); padding: 6px 12px; min-height: 36px; font-size: 0.875rem; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-fg); font-weight: 700; }
+.toggle { display: inline-flex; align-items: center; gap: 6px; font-size: 0.875rem; cursor: pointer; }
+.toggle input { width: 16px; height: 16px; accent-color: var(--accent); }
+
+#graph { width: 100%; height: auto; display: block; }
+.g-grid { stroke: var(--line); stroke-width: 1; }
+.g-ax { stroke: var(--muted); stroke-width: 1.5; }
+.g-tx { font: 12px var(--mono); fill: var(--muted); }
+.g-ti { font: 500 13px var(--sans); fill: var(--fg); }
+.g-pt { fill: var(--accent); stroke: var(--surface); stroke-width: 2; }
+.g-live { fill: none; stroke: var(--gas); stroke-width: 3; }
+.g-guide { stroke: var(--gas); stroke-width: 1.2; stroke-dasharray: 4 4; opacity: 0.8; }
+.g-theory { fill: none; stroke: var(--muted); stroke-width: 2; stroke-dasharray: 6 5; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 8px 0 0; padding: 0; list-style: none; font-size: 0.8125rem; color: var(--muted); }
+.legend li { display: inline-flex; align-items: center; gap: 6px; }
+.dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); display: inline-block; }
+.ring { width: 12px; height: 12px; border-radius: 50%; border: 3px solid var(--gas); display: inline-block; }
+.dash { width: 18px; border-top: 2px dashed var(--muted); display: inline-block; }
+
+.table-scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+th, td { padding: 7px 10px; text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { font-size: 0.8125rem; font-weight: 500; color: var(--muted); }
+td { font-family: var(--mono); font-weight: 500; }
+th:first-child, td:first-child { text-align: left; font-family: var(--sans); }
+td.empty { text-align: left; font-family: var(--sans); font-weight: 400; color: var(--muted); white-space: normal; }
+td.del { text-align: center; width: 44px; padding: 2px; }
+td.del button { min-height: 32px; width: 32px; padding: 0; background: transparent; border-color: transparent; color: var(--muted); }
+td.del button:hover { color: var(--gas); border-color: var(--line); }
+.count { font-size: 0.8125rem; color: var(--muted); font-weight: 400; margin-left: 6px; }
+
+.qs { margin: 0; padding-left: 1.25rem; display: grid; gap: 8px; }
+details { margin-top: 14px; border-top: 1px solid var(--line); padding-top: 12px; }
+summary { cursor: pointer; font-weight: 700; }
+details p { margin: 8px 0 0; }
+.eq { font-family: var(--mono); font-weight: 600; background: var(--surface-2); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; display: inline-block; margin-top: 8px; }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>보일의 법칙 실험실</h1>
+    <p class="sub">주사기 속 기체의 부피를 바꾸면 압력센서의 값은 어떻게 달라질까요? 부피를 조절하고 측정값을 기록해 그래프로 규칙을 찾아 보세요.</p>
+    <div class="chips">
+      <span class="chip">온도 일정</span>
+      <span class="chip">기체의 양 일정 (주사기 끝을 막음)</span>
+    </div>
+  </header>
+
+  <div class="layout">
+    <div class="col">
+      <section class="card" aria-labelledby="h-lab">
+        <div class="card-head"><h2 id="h-lab">실험 장치</h2></div>
+
+        <svg id="syringe" viewBox="0 0 600 180" role="img" aria-label="압력센서에 연결된 주사기. 피스톤을 움직여 기체의 부피를 조절한다.">
+          <!-- 압력센서 -->
+          <rect class="sensor" x="2" y="58" width="70" height="84" rx="8"/>
+          <rect class="lcd" x="8" y="64" width="58" height="42" rx="4"/>
+          <text id="lcdVal" class="lcd-val" x="37" y="86" text-anchor="middle">1.00</text>
+          <text class="lcd-unit" x="37" y="101" text-anchor="middle">기압</text>
+          <text class="svg-lbl" x="37" y="128" text-anchor="middle">압력센서</text>
+          <rect class="tube" x="72" y="94" width="32" height="12"/>
+
+          <!-- 주사기 통 -->
+          <rect class="barrel" x="100" y="60" width="360" height="80"/>
+          <rect id="gasbox" class="gasbox" x="100" y="64" width="180" height="72"/>
+          <g id="particles"></g>
+
+          <!-- 눈금 -->
+          <g id="ticks"></g>
+
+          <!-- 부피 표시선 -->
+          <g id="dim">
+            <path id="dimPath" class="dim" d="M100 44H280M100 38V50M280 38V50"/>
+            <text id="dimTx" class="dim-tx" x="190" y="32" text-anchor="middle">30 mL</text>
+          </g>
+
+          <!-- 피스톤 -->
+          <g id="plunger" class="plunger" transform="translate(280 0)" tabindex="0" role="slider" aria-label="주사기 피스톤 (부피 mL)" aria-valuemin="10" aria-valuemax="50" aria-valuenow="30" aria-valuetext="30 mL">
+            <rect class="seal" x="0" y="64" width="12" height="72"/>
+            <rect class="rod" x="12" y="92" width="170" height="16"/>
+            <rect class="pad" x="178" y="68" width="14" height="64" rx="4"/>
+            <rect x="0" y="60" width="194" height="80" fill="transparent"/>
+          </g>
+          <rect class="flange" x="456" y="50" width="10" height="100" rx="2"/>
+        </svg>
+
+        <div class="ctrl">
+          <label for="vol"><span>주사기 부피 조절</span><span id="volTxt">30 mL</span></label>
+          <div class="ctrl-row">
+            <button class="step" id="minus" type="button" aria-label="부피 1 mL 줄이기">−</button>
+            <input type="range" id="vol" min="10" max="50" step="1" value="30">
+            <button class="step" id="plus" type="button" aria-label="부피 1 mL 늘리기">+</button>
+          </div>
+          <p class="hint">슬라이더를 움직이거나 주사기의 피스톤을 직접 끌어 보세요. (10 mL ~ 50 mL)</p>
+        </div>
+
+        <div class="readouts">
+          <div class="ro">
+            <span class="ro-l">기체의 부피 V</span>
+            <span class="ro-v"><span id="roV">30</span><small>mL</small></span>
+            <span class="ro-s">&nbsp;</span>
+          </div>
+          <div class="ro">
+            <span class="ro-l">센서가 측정한 압력 P</span>
+            <span class="ro-v"><span id="roP">1.00</span><small>기압</small></span>
+            <span class="ro-s" id="roAtm">30 mL일 때 1기압</span>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="primary" id="rec" type="button">측정값 기록</button>
+          <button class="ghost" id="home" type="button">처음 부피(30 mL)로</button>
+        </div>
+        <p class="status" id="status" role="status" aria-live="polite">부피를 바꾼 뒤 ‘측정값 기록’을 눌러 보세요.</p>
+      </section>
+
+      <section class="card" aria-labelledby="h-q">
+        <div class="card-head"><h2 id="h-q">탐구 질문</h2></div>
+        <ol class="qs">
+          <li>피스톤을 눌러 부피를 줄이면 압력은 어떻게 변하나요?</li>
+          <li>부피가 30 mL에서 15 mL로 절반이 되면 압력은 몇 배가 되나요?</li>
+          <li>기록표의 P × V 값을 비교해 보세요. 어떤 규칙이 보이나요?</li>
+          <li>압력–부피 그래프와 압력–1/부피 그래프는 모양이 어떻게 다른가요?</li>
+          <li>부피가 줄어들 때 기체 입자의 충돌 횟수는 어떻게 달라질까요?</li>
+        </ol>
+        <details>
+          <summary>정리 보기</summary>
+          <p>온도가 일정할 때, 일정한 양의 기체의 압력은 부피에 반비례합니다. 이를 보일의 법칙이라고 합니다.</p>
+          <p class="eq">P × V = 일정</p>
+          <p>부피가 줄면 같은 수의 기체 입자가 좁은 공간에서 움직이므로 용기 벽에 부딪히는 횟수가 늘어나 압력이 커집니다.</p>
+        </details>
+      </section>
+    </div>
+
+    <div class="col">
+      <section class="card" aria-labelledby="h-g">
+        <div class="card-head">
+          <h2 id="h-g">압력 그래프</h2>
+          <div class="seg" role="group" aria-label="그래프 종류">
+            <button type="button" data-view="pv" aria-pressed="true">압력–부피</button>
+            <button type="button" data-view="pinv" aria-pressed="false">압력–1/부피</button>
+          </div>
+        </div>
+        <svg id="graph" viewBox="0 0 560 380" role="img" aria-label="기록한 부피와 압력 값을 나타낸 그래프"></svg>
+        <ul class="legend">
+          <li><span class="dot"></span>기록한 값</li>
+          <li><span class="ring"></span>지금 측정 중인 값</li>
+          <li><span class="dash"></span>예상 곡선</li>
+        </ul>
+        <div class="actions">
+          <label class="toggle" for="theory"><input type="checkbox" id="theory">예상 곡선 보기</label>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="h-t">
+        <div class="card-head">
+          <h2 id="h-t">측정 기록<span class="count" id="count">0개</span></h2>
+          <button class="ghost" id="clear" type="button">기록 모두 지우기</button>
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr><th>순서</th><th>부피 V (mL)</th><th>압력 P (기압)</th><th>P × V</th><th><span class="sr-only" style="position:absolute;left:-9999px">삭제</span></th></tr>
+            </thead>
+            <tbody id="rows"></tbody>
+          </table>
+        </div>
+        <p class="hint" style="margin-top:10px">같은 부피를 다시 기록하면 이전 값이 바뀝니다. 압력은 소수 둘째 자리까지 나타냅니다.</p>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var K = 30;                    // P × V 상수: 30 mL에서 1기압
+  var VMIN = 10, VMAX = 50, V0 = 30;
+  var X0 = 100, PX = 6, GY = 64, GH = 72;
+  var NS = 'http://www.w3.org/2000/svg';
+
+  var v = V0, records = [], view = 'pv', theory = false;
+  var $ = function (id) { return document.getElementById(id); };
+
+  var svg = $('syringe'), gasbox = $('gasbox'), plunger = $('plunger');
+  var dimPath = $('dimPath'), dimTx = $('dimTx');
+  var vol = $('vol'), graph = $('graph');
+
+  function pressureAt(volume) { return Math.round(K / volume * 100) / 100; }
+  function clampV(n) { return Math.max(VMIN, Math.min(VMAX, Math.round(n))); }
+
+  /* ---------- 눈금 ---------- */
+  (function drawTicks() {
+    var g = $('ticks'), html = '';
+    for (var i = 0; i <= 60; i++) {
+      var x = X0 + PX * i;
+      var h = i % 10 === 0 ? 10 : (i % 5 === 0 ? 7 : 4);
+      html += '<line class="tick" x1="' + x + '" x2="' + x + '" y1="140" y2="' + (140 + h) + '"/>';
+      if (i % 10 === 0) html += '<text class="tick-tx" x="' + x + '" y="168" text-anchor="middle">' + i + '</text>';
+    }
+    html += '<text class="tick-tx" x="' + (X0 + 360 + 22) + '" y="168" text-anchor="start">mL</text>';
+    g.innerHTML = html;
+  })();
+
+  /* ---------- 기체 입자 ---------- */
+  var N = 18, R = 4, SPEED = 75;
+  var parts = [], circles = [];
+  var lastW = PX * v;
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  (function initParts() {
+    var g = $('particles');
+    for (var i = 0; i < N; i++) {
+      var a = Math.random() * Math.PI * 2;
+      parts.push({
+        x: R + Math.random() * (lastW - 2 * R),
+        y: R + Math.random() * (GH - 2 * R),
+        vx: Math.cos(a) * SPEED,
+        vy: Math.sin(a) * SPEED
+      });
+      var c = document.createElementNS(NS, 'circle');
+      c.setAttribute('r', R);
+      c.setAttribute('class', 'particle');
+      g.appendChild(c);
+      circles.push(c);
+    }
+  })();
+  function drawParts() {
+    for (var i = 0; i < N; i++) {
+      circles[i].setAttribute('cx', (X0 + parts[i].x).toFixed(1));
+      circles[i].setAttribute('cy', (GY + parts[i].y).toFixed(1));
+    }
+  }
+  function stepParts(dt) {
+    var w = PX * v;
+    for (var i = 0; i < N; i++) {
+      var p = parts[i];
+      p.x += p.vx * dt; p.y += p.vy * dt;
+      if (p.x < R) { p.x = R; p.vx = Math.abs(p.vx); }
+      if (p.x > w - R) { p.x = w - R; p.vx = -Math.abs(p.vx); }
+      if (p.y < R) { p.y = R; p.vy = Math.abs(p.vy); }
+      if (p.y > GH - R) { p.y = GH - R; p.vy = -Math.abs(p.vy); }
+    }
+  }
+  var lastT = 0;
+  function tick(t) {
+    var dt = Math.min(0.05, (t - lastT) / 1000 || 0);
+    lastT = t;
+    stepParts(dt);
+    drawParts();
+    requestAnimationFrame(tick);
+  }
+
+  /* ---------- 주사기 갱신 ---------- */
+  function updateSyringe() {
+    var w = PX * v;
+    gasbox.setAttribute('width', w);
+    plunger.setAttribute('transform', 'translate(' + (X0 + w) + ' 0)');
+    dimPath.setAttribute('d', 'M' + X0 + ' 44H' + (X0 + w) + 'M' + X0 + ' 38V50M' + (X0 + w) + ' 38V50');
+    dimTx.setAttribute('x', X0 + w / 2);
+    dimTx.textContent = v + ' mL';
+    for (var i = 0; i < N; i++) {
+      var p = parts[i];
+      p.x = Math.max(R, Math.min(w - R, p.x * w / lastW));
+    }
+    lastW = w;
+    drawParts();
+
+    var p = pressureAt(v);
+    $('lcdVal').textContent = p.toFixed(2);
+    $('roV').textContent = v;
+    $('roP').textContent = p.toFixed(2);
+    $('volTxt').textContent = v + ' mL';
+    vol.value = v;
+    plunger.setAttribute('aria-valuenow', v);
+    plunger.setAttribute('aria-valuetext', v + ' mL');
+  }
+
+  /* ---------- 그래프 ---------- */
+  function renderGraph() {
+    var W = 560, H = 380, L = 66, Rm = 22, T = 18, B = 58;
+    var pv = view === 'pv';
+    var xmax = pv ? 60 : 0.12, xstep = pv ? 10 : 0.02, ymax = 3.5, ystep = 0.5;
+    var nx = Math.round(xmax / xstep), ny = Math.round(ymax / ystep);
+    var sx = function (x) { return L + x / xmax * (W - L - Rm); };
+    var sy = function (y) { return H - B - y / ymax * (H - T - B); };
+    var X = function (volume) { return pv ? volume : 1 / volume; };
+    var s = '', i, j;
+
+    for (j = 0; j <= ny; j++) {
+      var yv = j * ystep;
+      s += '<line class="g-grid" x1="' + L + '" x2="' + (W - Rm) + '" y1="' + sy(yv) + '" y2="' + sy(yv) + '"/>';
+      s += '<text class="g-tx" x="' + (L - 8) + '" y="' + (sy(yv) + 4) + '" text-anchor="end">' + yv.toFixed(1) + '</text>';
+    }
+    for (i = 0; i <= nx; i++) {
+      var xv = i * xstep;
+      s += '<line class="g-grid" x1="' + sx(xv) + '" x2="' + sx(xv) + '" y1="' + T + '" y2="' + (H - B) + '"/>';
+      s += '<text class="g-tx" x="' + sx(xv) + '" y="' + (H - B + 20) + '" text-anchor="middle">' + (pv ? xv : xv.toFixed(2)) + '</text>';
+    }
+    s += '<line class="g-ax" x1="' + L + '" x2="' + L + '" y1="' + T + '" y2="' + (H - B) + '"/>';
+    s += '<line class="g-ax" x1="' + L + '" x2="' + (W - Rm) + '" y1="' + (H - B) + '" y2="' + (H - B) + '"/>';
+    s += '<text class="g-ti" x="' + ((L + W - Rm) / 2) + '" y="' + (H - 12) + '" text-anchor="middle">' + (pv ? '부피 V (mL)' : '1/부피 (1/mL)') + '</text>';
+    s += '<text class="g-ti" transform="translate(16 ' + ((T + H - B) / 2) + ') rotate(-90)" text-anchor="middle">압력 P (기압)</text>';
+
+    if (theory) {
+      var d = '';
+      if (pv) {
+        for (var q = VMIN; q <= VMAX; q++) d += (q === VMIN ? 'M' : 'L') + sx(q).toFixed(1) + ' ' + sy(K / q).toFixed(1);
+      } else {
+        d = 'M' + sx(1 / VMAX).toFixed(1) + ' ' + sy(K * (1 / VMAX)).toFixed(1) + 'L' + sx(1 / VMIN).toFixed(1) + ' ' + sy(K * (1 / VMIN)).toFixed(1);
+      }
+      s += '<path class="g-theory" d="' + d + '"/>';
+    }
+
+    var cx = sx(X(v)), cy = sy(pressureAt(v));
+    s += '<line class="g-guide" x1="' + L + '" x2="' + cx + '" y1="' + cy + '" y2="' + cy + '"/>';
+    s += '<line class="g-guide" x1="' + cx + '" x2="' + cx + '" y1="' + cy + '" y2="' + (H - B) + '"/>';
+
+    for (i = 0; i < records.length; i++) {
+      var r = records[i];
+      s += '<circle class="g-pt" cx="' + sx(X(r.v)).toFixed(1) + '" cy="' + sy(r.p).toFixed(1) + '" r="6"><title>부피 ' + r.v + ' mL, 압력 ' + r.p.toFixed(2) + ' 기압</title></circle>';
+    }
+    s += '<circle class="g-live" cx="' + cx.toFixed(1) + '" cy="' + cy.toFixed(1) + '" r="9"/>';
+    graph.innerHTML = s;
+  }
+
+  /* ---------- 기록표 ---------- */
+  function renderTable() {
+    var tb = $('rows'), html = '';
+    if (!records.length) {
+      html = '<tr><td class="empty" colspan="5">아직 기록한 값이 없습니다. 부피를 바꾼 뒤 ‘측정값 기록’을 눌러 보세요.</td></tr>';
+    } else {
+      for (var i = 0; i < records.length; i++) {
+        var r = records[i];
+        html += '<tr><td>' + (i + 1) + '</td><td>' + r.v + '</td><td>' + r.p.toFixed(2) + '</td><td>' + (r.p * r.v).toFixed(2) + '</td>' +
+          '<td class="del"><button type="button" data-del="' + i + '" aria-label="' + (i + 1) + '번 기록 삭제">×</button></td></tr>';
+      }
+    }
+    tb.innerHTML = html;
+    $('count').textContent = records.length + '개';
+  }
+
+  function say(msg) { $('status').textContent = msg; }
+
+  function render() { updateSyringe(); renderGraph(); }
+
+  function setV(n) {
+    n = clampV(n);
+    if (n === v) return;
+    v = n;
+    render();
+  }
+
+  /* ---------- 조작 ---------- */
+  vol.addEventListener('input', function () { setV(parseFloat(vol.value)); });
+  $('minus').addEventListener('click', function () { setV(v - 1); });
+  $('plus').addEventListener('click', function () { setV(v + 1); });
+  $('home').addEventListener('click', function () { setV(V0); say('부피를 ' + V0 + ' mL로 되돌렸습니다.'); });
+
+  $('rec').addEventListener('click', function () {
+    var p = pressureAt(v), idx = -1, i;
+    for (i = 0; i < records.length; i++) if (records[i].v === v) idx = i;
+    if (idx >= 0) {
+      records[idx].p = p;
+      say(v + ' mL의 기록을 다시 측정한 값으로 바꿨습니다. (' + p.toFixed(2) + '기압)');
+    } else {
+      records.push({ v: v, p: p });
+      say(v + ' mL, ' + p.toFixed(2) + '기압을 기록했습니다. (' + records.length + '개)');
+    }
+    renderTable(); renderGraph();
+  });
+  $('clear').addEventListener('click', function () {
+    records = [];
+    renderTable(); renderGraph();
+    say('기록을 모두 지웠습니다.');
+  });
+  $('rows').addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('button[data-del]') : null;
+    if (!b) return;
+    records.splice(parseInt(b.getAttribute('data-del'), 10), 1);
+    renderTable(); renderGraph();
+    say('기록 1개를 삭제했습니다.');
+  });
+  $('theory').addEventListener('change', function (e) { theory = e.target.checked; renderGraph(); });
+  Array.prototype.forEach.call(document.querySelectorAll('.seg button'), function (b) {
+    b.addEventListener('click', function () {
+      view = b.getAttribute('data-view');
+      Array.prototype.forEach.call(document.querySelectorAll('.seg button'), function (o) {
+        o.setAttribute('aria-pressed', o === b ? 'true' : 'false');
+      });
+      renderGraph();
+    });
+  });
+
+  /* ---------- 피스톤 끌기 ---------- */
+  var dragging = false, grab = 0;
+  function svgX(e) {
+    var pt = svg.createSVGPoint();
+    pt.x = e.clientX; pt.y = e.clientY;
+    return pt.matrixTransform(svg.getScreenCTM().inverse()).x;
+  }
+  plunger.addEventListener('pointerdown', function (e) {
+    dragging = true;
+    grab = svgX(e) - (X0 + PX * v);
+    try { plunger.setPointerCapture(e.pointerId); } catch (err) {}
+    e.preventDefault();
+  });
+  plunger.addEventListener('pointermove', function (e) {
+    if (!dragging) return;
+    setV((svgX(e) - grab - X0) / PX);
+  });
+  function endDrag() { dragging = false; }
+  plunger.addEventListener('pointerup', endDrag);
+  plunger.addEventListener('pointercancel', endDrag);
+  plunger.addEventListener('keydown', function (e) {
+    var k = e.key;
+    if (k === 'ArrowRight' || k === 'ArrowUp') { setV(v + 1); e.preventDefault(); }
+    else if (k === 'ArrowLeft' || k === 'ArrowDown') { setV(v - 1); e.preventDefault(); }
+    else if (k === 'Home') { setV(VMIN); e.preventDefault(); }
+    else if (k === 'End') { setV(VMAX); e.preventDefault(); }
+  });
+
+  /* ---------- 시작 ---------- */
+  render();
+  renderTable();
+  if (!reduce) requestAnimationFrame(tick);
+})();
+</script>
+
+</body></html>
